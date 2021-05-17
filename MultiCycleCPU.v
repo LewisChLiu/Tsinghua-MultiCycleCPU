@@ -127,6 +127,7 @@ module MultiCycleCPU (reset, clk);
 	
 	wire [3:0] PC_H4;
 	assign PC_H4 = PC_o[31:28];
+	assign jAddr = {PC_H4[3:0], shift_2[27:0]};
 	//always @(posedge reset or posedge clk) begin
 	//	jAddr <= {PC_H4[3:0], shift_2[27:0]};
 	//end

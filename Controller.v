@@ -94,79 +94,51 @@ module Controller(reset, clk, OpCode, Funct,
 			case(SM_State)
 				IF:
 					begin
-						MemWrite <= 0;
-						RegWrite <= 0;
-						IorD <= 0;
-						MemRead <= 1;
-						IRWrite <= 1;
-						PCWrite <= 1;
-						PCWriteCond <= 0;
-						PCSource[1:0] <= 2'b00;
-						ALUSrcA[1:0] <= 2'b00;
-						ALUSrcB[1:0] <= 2'b01;
 						SM_State <= ID_RF;
 					end
 				ID_RF:
 					begin
-						MemRead <= 0;
-						IRWrite <= 0;
-						PCWrite <= 0;
-						ALUSrcA[1:0] <= 2'b00;
-						ALUSrcB[1:0] <= 2'b11;
+						SM_State <= EXE;
+					end
+				MAR:
+					begin
+						SM_State <= RWLW;
+					end
+				RWLW:
+					begin
+						SM_State <= IF;
+					end
+				MAW:
+					begin
+						SM_State <= IF;
+					end
+				EXE:
+					begin
 						case (OpCode)
-							6'b000000:
-								begin
-									SM_State <= EXE;
-								end
 							6'h0f: // lui
 								begin
-									SM_State <= EXE;
+									SM_State <= RW;
 								end
-							6'h08:
+							6'h08: // addi
 								begin
-									SM_State <= EXE;
+									SM_State <= RW;
 								end
-							6'h09:
-								begin 
-									SM_State <= EXE;
+							6'h09: // addiu, prob exists
+								begin
+									SM_State <= RW;
 								end
 							6'h0c: // andi
 								begin
-									SM_State <= EXE;
+									SM_State <= RW;
 								end
-							6'h0a:
+							6'h0a: // slti
 								begin
-									SM_State <= EXE;
+									SM_State <= RW;
 								end
 							6'h0b: // sltiu
 								begin
-									SM_State <= EXE;
+									SM_State <= RW;
 								end
-							6'h23:
-								begin
-									SM_State <= MADC;
-								end
-							6'h2b:
-								begin
-									SM_State <= MADC;
-								end
-							6'h04:
-								begin
-									SM_State <= BC;
-								end
-							6'h02:
-								begin
-									SM_State <= JC;
-								end
-							default:
-									SM_State <= IF;
-						endcase
-					end
-				MADC:
-					begin
-						ALUSrcA <= 2'b01;
-						ALUSrcB <= 2'b10;
-						case (OpCode)
 							6'h23:
 								begin
 									SM_State <= MAR;
@@ -175,31 +147,86 @@ module Controller(reset, clk, OpCode, Funct,
 								begin
 									SM_State <= MAW;
 								end
+							6'h04:
+								begin
+									SM_State <= IF;
+								end
+							6'h02:
+								begin
+									SM_State <= IF;
+								end
+							6'h03:
+								begin
+									SM_State <= IF;
+								end
+							6'h04:
+								begin
+									SM_State <= IF;
+								end
+							default: // those inst with zero Opcode
+								begin
+									case(Funct)
+										6'h08:
+											begin
+												SM_State <= JC; // jr
+											end
+										6'h09:
+											begin
+												SM_State <= JC; // jalr
+											end
+										default:
+											begin
+												SM_State <= RW;
+											end
+									endcase
+								end
 						endcase
 					end
-				MAR:
+				RW:
 					begin
-						MemRead <= 1;
-						IorD <= 1;
-						SM_State <= RWLW;
+						SM_State <= IF;
 					end
-				RWLW:
+				JC:
 					begin
+						SM_State <= IF;
+					end
+			endcase
+		end
+	end
+	
+	// ExtOp and LuiOp
+	always @(*) begin
+		ExtOp = (OpCode == 6'h0b | OpCode == 6'h0c) ? 0 : 1; // andi, sltiu
+		LuiOp = (OpCode == 6'h0f) ? 1 : 0; // lui
+	end
+	
+	// Control Logics
+	always @(*) begin
+		case(SM_State)
+			IF:
+				begin
+					MemWrite <= 0;
+					RegWrite <= 0;
+					IorD <= 0;
+					MemRead <= 1;
+					IRWrite <= 1;
+					PCWrite <= 1;
+					PCWriteCond <= 0;
+					PCSource[1:0] <= 2'b00;
+					ALUSrcA[1:0] <= 2'b00;
+					ALUSrcB[1:0] <= 2'b01;
+				end
+			ID_RF:
+				begin
 						MemRead <= 0;
-						RegWrite <= 1;
-						RegDst <= 2'b00; // write in rt
-						MemtoReg <= 0;
-						SM_State <= IF;
-					end
-				MAW:
-					begin
-						MemWrite <= 1;
-						IorD <= 1;
-						SM_State <= IF;
-					end
-				EXE:
-					begin
-						case (OpCode)
+						IRWrite <= 0;
+						PCWrite <= 0;
+						ALUSrcA[1:0] <= 2'b00;
+						ALUSrcB[1:0] <= 2'b11;
+				end
+			EXE:
+				begin
+					case(OpCode)
 							6'h0f: // lui
 								begin
 									ALUSrcA <= 2'b01;
@@ -230,20 +257,51 @@ module Controller(reset, clk, OpCode, Funct,
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
 								end
-							default: // those inst with zero Opcode
+							6'h23:
+								begin
+									ALUSrcA <= 2'b01;
+									ALUSrcB <= 2'b10;		
+								end
+							6'h2b:
+								begin
+									ALUSrcA <= 2'b01;
+									ALUSrcB <= 2'b10;
+								end
+							6'h04:
+								begin
+									PCWriteCond <= 1;
+									ALUSrcA <= 2'b01;
+									ALUSrcB <= 2'b00;
+									PCSource <= 2'b01;
+								end	
+							6'h02:
+								begin
+									PCWrite <= 1;
+									PCSource[1:0] <= 2'b11;
+								end
+							6'h03:
+								begin
+									PCWrite <= 1;
+									PCSource <= 2'b11;
+									RegWrite <= 1;
+									RegDst <= 2'b10;
+									PCorData <= 1;
+									MemtoReg <= 0;
+								end
+							6'h00:
 								begin
 									case(Funct)
-										6'h00: // sll
+										6'h00:
 											begin
 												ALUSrcA <= 2'b10;
 												ALUSrcB <= 2'b00;
 											end
-										6'h02: // srl
+										6'h02:
 											begin
 												ALUSrcA <= 2'b10;
 												ALUSrcB <= 2'b00;
 											end
-										6'h03: // sra
+										6'h03:
 											begin
 												ALUSrcA <= 2'b10;
 												ALUSrcB <= 2'b00;
@@ -255,14 +313,36 @@ module Controller(reset, clk, OpCode, Funct,
 											end
 									endcase
 								end
-							
-						endcase
-						if (Funct != 6'h08 && Funct != 6'h09) SM_State <= RW; // not jr or jalr
-						else SM_State <= JC;// for jr and jalr
-					end
-				RW:
-					begin
-						RegWrite <= 1;
+					endcase
+				end
+			JC:
+				begin
+					case(Funct)
+							6'h08: // jr
+								begin
+									PCWrite <= 1;
+									PCSource <= 2'b01;
+									RegWrite <= 1;
+									RegDst <= 2'b10;
+									PCorData <= 1;
+									MemtoReg <= 0;
+								end
+							6'h09: // jalr
+								begin
+									PCWrite <= 1;
+									PCSource <= 2'b01;
+									RegWrite <= 1;
+									RegDst <= 2'b01;
+									PCorData <= 1;
+									MemtoReg <= 0;
+								end
+							default:begin
+									end		
+					endcase
+				end
+			RW:
+				begin
+					RegWrite <= 1;
 						case(OpCode)
 							6'h0f: // lui
 								begin
@@ -307,74 +387,25 @@ module Controller(reset, clk, OpCode, Funct,
 									MemtoReg <= 0;
 								end
 						endcase
-						SM_State <= IF;
-					end
-				BC:
-					begin
-						PCWriteCond <= 1;
-						ALUSrcA <= 2'b01;
-						ALUSrcB <= 2'b00;
-						PCSource <= 2'b01;
-						SM_State <= IF;
-					end
-				JC:
-					begin
-						case(OpCode)
-							6'h02: // j
-								begin
-									PCWrite <= 1;
-									PCSource[1:0] <= 2'b11;
-								end
-							6'h03: // jal
-								begin
-									PCWrite <= 1;
-									PCSource <= 2'b11;
-									RegWrite <= 1;
-									RegDst <= 2'b10;
-									PCorData <= 1;
-									MemtoReg <= 0;
-								end
-							default:
-								begin
-									case(Funct)
-										6'h08: // jr
-											begin
-												PCWrite <= 1;
-												PCSource <= 2'b01;
-												RegWrite <= 1;
-												RegDst <= 2'b10;
-												PCorData <= 1;
-												MemtoReg <= 0;
-											end
-										6'h09: // jalr
-											begin
-												PCWrite <= 1;
-												PCSource <= 2'b01;
-												RegWrite <= 1;
-												RegDst <= 2'b01;
-												PCorData <= 1;
-												MemtoReg <= 0;
-											end
-										default:begin
-									end		
-									endcase
-								end
-						endcase
-						SM_State <= IF;
-					end
-			endcase
-		end
-	end
-	
-	// ExtOp and LuiOp
-	always @(*) begin
-		ExtOp = (OpCode == 6'h0b | OpCode == 6'h0c) ? 0 : 1; // andi, sltiu
-		LuiOp = (OpCode == 6'h0f) ? 1 : 0; // lui
-	end
-	
-	// Control Logics
-	always @(*) begin
-	
+				end
+			MAR:
+				begin
+						MemRead <= 1;
+						IorD <= 1;
+				end
+			RWLW:
+				begin
+						MemRead <= 0;
+						RegWrite <= 1;
+						RegDst <= 2'b00; // write in rt
+						MemtoReg <= 0;
+				end
+			MAW:
+				begin
+						MemWrite <= 1;
+						IorD <= 1;
+				end
+		endcase
 	end
 
     //--------------Your code above-----------------------
