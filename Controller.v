@@ -372,7 +372,10 @@ module Controller(reset, clk, OpCode, Funct,
 		LuiOp = (OpCode == 6'h0f) ? 1 : 0; // lui
 	end
 	
-	// 
+	// Control Logics
+	always @(*) begin
+	
+	end
 
     //--------------Your code above-----------------------
 
