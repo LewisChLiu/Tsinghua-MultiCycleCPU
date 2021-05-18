@@ -196,7 +196,7 @@ module Controller(reset, clk, OpCode, Funct,
 	
 	// ExtOp and LuiOp
 	always @(*) begin
-		ExtOp = (OpCode == 6'h0b | OpCode == 6'h0c) ? 0 : 1; // andi, sltiu
+		ExtOp = (OpCode == 6'h0c) ? 0 : 1; // andi
 		LuiOp = (OpCode == 6'h0f) ? 1 : 0; // lui
 	end
 	
@@ -398,7 +398,8 @@ module Controller(reset, clk, OpCode, Funct,
 						MemRead <= 0;
 						RegWrite <= 1;
 						RegDst <= 2'b00; // write in rt
-						MemtoReg <= 0;
+						PCorData <= 0;
+						MemtoReg <= 1;
 				end
 			MAW:
 				begin
