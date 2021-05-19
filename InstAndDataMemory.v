@@ -147,7 +147,7 @@ module InstAndDataMemory(reset, clk, Address, Write_data, MemRead, MemWrite, Mem
 				RAM_data[8'd31] <= {6'h0d, 5'd00, 5'd00, 16'hffff};
             //init instruction memory
             //reset data memory		  
-			for (i = RAM_INST_SIZE - 1 ; i < RAM_SIZE; i = i + 1) // before i = RAM_INST_SIZE - 1
+			for (i = RAM_INST_SIZE  ; i < RAM_SIZE; i = i + 1) // before i = RAM_INST_SIZE - 1
 				RAM_data[i] <= 32'h00000000;
 		end else if (MemWrite) begin
 			RAM_data[Address[RAM_SIZE_BIT + 1:2]] <= Write_data;
