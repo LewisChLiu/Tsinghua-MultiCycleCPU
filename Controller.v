@@ -20,16 +20,17 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Controller(reset, clk, OpCode, Funct, 
+module Controller(reset, clk, OpCode, Funct, Overflow,  
                 PCWrite, PCWriteCond, IorD, MemWrite, MemRead,
                 IRWrite, MemtoReg, RegDst, RegWrite, ExtOp, LuiOp,
-                ALUSrcA, ALUSrcB, ALUOp, PCSource, PCorData);
+                ALUSrcA, ALUSrcB, ALUOp, PCSource, PCorData, Err, ErWrite, isEIF, WrE);
     //Input Clock Signals
     input reset;
     input clk;
     //Input Signals
     input  [5:0] OpCode;
     input  [5:0] Funct;
+	input Overflow;
     //Output Control Signals
     output reg PCWrite;
     output reg PCWriteCond;
@@ -47,6 +48,10 @@ module Controller(reset, clk, OpCode, Funct,
     output reg [3:0] ALUOp;
     output reg [1:0] PCSource;
 	output reg PCorData;
+	output reg Err;
+	output reg ErWrite;
+	output reg isEIF;
+	output reg WrE;
   
     //--------------Your code below-----------------------
     
@@ -61,6 +66,10 @@ module Controller(reset, clk, OpCode, Funct,
 	parameter RW = 4'b0111;
 	parameter BC = 4'b1000;
 	parameter JC = 4'b1001;
+	parameter ERR = 4'b1010;
+	parameter EMP = 4'b1011;
+	parameter EWB = 4'b1100;
+	parameter TMP = 4'b1101;
 	
 	//reg [5:0] OpCode_delay;
 	//reg [5:0] Funct_delay;
@@ -89,6 +98,10 @@ module Controller(reset, clk, OpCode, Funct,
 			ALUOp[3:0] <= 2'b0000;
 			PCSource[1:0] <= 2'b00;
 			PCorData <= 0;
+			Err <= 0;
+			ErWrite <= 0;
+			isEIF <= 0;
+			WrE <= 0;
 		end
 		else begin
 			case(SM_State)
@@ -163,6 +176,10 @@ module Controller(reset, clk, OpCode, Funct,
 								begin
 									SM_State <= IF;
 								end
+							6'h0d:
+								begin
+									SM_State <= RW;
+								end
 							default: // those inst with zero Opcode
 								begin
 									case(Funct)
@@ -184,12 +201,33 @@ module Controller(reset, clk, OpCode, Funct,
 					end
 				RW:
 					begin
+						if (Overflow) begin
+							SM_State <= ERR;
+						end
+						else begin
+							SM_State <= IF;
+						end
+					end
+				ERR:
+					begin
 						SM_State <= IF;
 					end
+				// EMP:
+				// 	begin
+				// 		SM_State <= TMP;
+				// 	end
+				// TMP:
+				// 	begin
+				// 		SM_State <= ID_RF;
+				// 	end
 				JC:
 					begin
 						SM_State <= IF;
 					end
+				// EWB:
+				// 	begin
+				// 		SM_State <= IF;
+				// 	end
 			endcase
 		end
 	end
@@ -212,12 +250,20 @@ module Controller(reset, clk, OpCode, Funct,
 					IRWrite <= 1;
 					PCWrite <= 1;
 					PCWriteCond <= 0;
+					ErWrite <= 0;
+					Err <= 0;
+					isEIF <= 0;
+					WrE <= 0;
 					PCSource[1:0] <= 2'b00;
 					ALUSrcA[1:0] <= 2'b00;
 					ALUSrcB[1:0] <= 2'b01;
+					
 				end
 			ID_RF:
 				begin
+						isEIF <= 0;
+						Err <= 0;
+						ErWrite <= 0;
 						MemRead <= 0;
 						IRWrite <= 0;
 						PCWrite <= 0;
@@ -287,6 +333,12 @@ module Controller(reset, clk, OpCode, Funct,
 									RegDst <= 2'b10;
 									PCorData <= 1;
 									MemtoReg <= 0;
+								end
+							6'h0d:
+								begin
+									Err <= 0;
+									ALUSrcA <= 01;
+									ALUSrcB <= 10;
 								end
 							6'h00:
 								begin
@@ -380,6 +432,15 @@ module Controller(reset, clk, OpCode, Funct,
 									PCorData <= 0;
 									MemtoReg <= 0;
 								end
+							6'h0d:
+								begin
+									WrE <= 1;
+									PCorData <= 0;
+									MemtoReg <= 0;
+									Err <= 1;
+									isEIF <= 1;
+									PCWrite <= 1;
+								end
 							default:
 								begin
 									RegDst <= 2'b01;
@@ -406,6 +467,44 @@ module Controller(reset, clk, OpCode, Funct,
 						MemWrite <= 1;
 						IorD <= 1;
 				end
+			ERR:
+				begin
+					Err <= 1;
+					PCWrite <= 1;
+					ErWrite <= 1;
+					isEIF <= 0;
+				end
+			// ERR:
+			// 	begin
+			// 		PCWrite <= 1;
+			// 		Err <= 1;
+			// 		ErWrite <= 0;
+			// 		isEIF <= 0;
+			// 		MemWrite <= 0;
+			// 		RegWrite <= 0;
+			// 		IorD <= 0;
+			// 		MemRead <= 0;
+			// 		IRWrite <= 0;
+			// 		PCWriteCond <= 0;
+			// 	end
+			// EMP:
+			// 	begin
+			// 		PCWrite <= 0;
+			// 		ErWrite <= 1;
+			// 		MemRead <= 1;
+			// 		IRWrite <= 1;
+			// 	end
+			// EWB:
+			// 	begin
+			// 		RegWrite <= 1;
+			// 		PCorData <= 0;
+			// 		MemtoReg <= 0;
+			// 		Err <= 1;
+			// 	end
+			// TMP:
+			// 	begin
+					
+			// 	end
 		endcase
 	end
 
@@ -425,6 +524,8 @@ module Controller(reset, clk, OpCode, Funct,
             ALUOp[2:0] = 3'b100;
         end else if (OpCode == 6'h0a || OpCode == 6'h0b) begin
             ALUOp[2:0] = 3'b101;
+		end else if (OpCode == 6'h09) begin
+			ALUOp[2:0] = 3'b011;
         end else begin
             ALUOp[2:0] = 3'b000;
         end

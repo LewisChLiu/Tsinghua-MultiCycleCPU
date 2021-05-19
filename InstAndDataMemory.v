@@ -83,50 +83,71 @@ module InstAndDataMemory(reset, clk, Address, Write_data, MemRead, MemWrite, Mem
 			//  RAM_data[8'd3] <= {6'h08, 5'd18, 5'd18, 16'h3456};
 			// setsub $s3, $s1, $s2
 			//  RAM_data[8'd4] <= {6'h00, 5'd17, 5'd18, 5'd19, 5'd0, 6'h28};
-			// addi $a0, $zero, 5
-				RAM_data[8'd0] <= {6'h08, 5'd0, 5'd4, 16'h0005};
-			// xor $v0, $zero, $zero
-				RAM_data[8'd1] <= {6'h00, 5'd0, 5'd0, 5'd2, 5'd0, 6'h26};
-			// jal sum
-				RAM_data[8'd2] <= {6'h03, 26'd4};
-			// Loop:
-			// beq $zero, $zero, Loop
-				RAM_data[8'd3] <= {6'h04, 5'd00, 5'd00, 16'hffff};
-			// sum:
-			// addi $sp, $sp, -8
-				RAM_data[8'd4] <= {6'h08, 5'd29, 5'd29, 16'hfff8};
-			// sw $ra, 4($sp)
-				RAM_data[8'd5] <= {6'h2b, 5'd29, 5'd31, 16'h0004};
-			// sw $a0, 0($sp)
-				RAM_data[8'd6] <= {6'h2b, 5'd29, 5'd04, 16'h0000};
-			// slti $t0, $a0, 1
-				RAM_data[8'd7] <= {6'h0a, 5'd04, 5'd08, 16'h0001};
-			// beq $t0, $zero, L1
-				RAM_data[8'd8] <= {6'h04, 5'd08, 5'd00, 16'h0002};
-			// addi $sp, $sp, 8
-				RAM_data[8'd9] <= {6'h08, 5'd29, 5'd29, 16'h0008};
-			// jr $ra
-				RAM_data[8'd10] <= {6'h00, 5'd31, 15'h0000, 6'h08};
-			// L1:
-			// add $v0, $a0, $v0
-				RAM_data[8'd11] <= {6'h00, 5'd04, 5'd02, 5'd02, 5'd00, 6'h20};
-			// addi $a0, $a0, -1
-				RAM_data[8'd12] <= {6'h08, 5'd04, 5'd04, 16'hffff};
-			// jal sum
-				RAM_data[8'd13] <= {6'h03, 26'd4};
-			// lw $a0, 0($sp)
-				RAM_data[8'd14] <= {6'h23, 5'd29, 5'd04, 16'h0000};
-			// lw $ra, 4($sp)
-				RAM_data[8'd15] <= {6'h23, 5'd29, 5'd31, 16'h0004};
-			// addi $sp, $sp, 8
-				RAM_data[8'd16] <= {6'h08, 5'd29, 5'd29, 16'h0008};
-			// add $v0, $a0, $v0
-				RAM_data[8'd17] <= {6'h00, 5'd04, 5'd02, 5'd02, 5'd00, 6'h20};
-			// jr $ra
-				RAM_data[8'd18] <= {6'h00, 5'd31, 15'h0000, 6'h08};
+			// // addi $a0, $zero, 5
+			// 	RAM_data[8'd0] <= {6'h08, 5'd0, 5'd4, 16'h0005};
+			// // xor $v0, $zero, $zero
+			// 	RAM_data[8'd1] <= {6'h00, 5'd0, 5'd0, 5'd2, 5'd0, 6'h26};
+			// // jal sum
+			// 	RAM_data[8'd2] <= {6'h03, 26'd4};
+			// // Loop:
+			// // beq $zero, $zero, Loop
+			// 	RAM_data[8'd3] <= {6'h04, 5'd00, 5'd00, 16'hffff};
+			// // sum:
+			// // addi $sp, $sp, -8
+			// 	RAM_data[8'd4] <= {6'h08, 5'd29, 5'd29, 16'hfff8};
+			// // sw $ra, 4($sp)
+			// 	RAM_data[8'd5] <= {6'h2b, 5'd29, 5'd31, 16'h0004};
+			// // sw $a0, 0($sp)
+			// 	RAM_data[8'd6] <= {6'h2b, 5'd29, 5'd04, 16'h0000};
+			// // slti $t0, $a0, 1
+			// 	RAM_data[8'd7] <= {6'h0a, 5'd04, 5'd08, 16'h0001};
+			// // beq $t0, $zero, L1
+			// 	RAM_data[8'd8] <= {6'h04, 5'd08, 5'd00, 16'h0002};
+			// // addi $sp, $sp, 8
+			// 	RAM_data[8'd9] <= {6'h08, 5'd29, 5'd29, 16'h0008};
+			// // jr $ra
+			// 	RAM_data[8'd10] <= {6'h00, 5'd31, 15'h0000, 6'h08};
+			// // L1:
+			// // add $v0, $a0, $v0
+			// 	RAM_data[8'd11] <= {6'h00, 5'd04, 5'd02, 5'd02, 5'd00, 6'h20};
+			// // addi $a0, $a0, -1
+			// 	RAM_data[8'd12] <= {6'h08, 5'd04, 5'd04, 16'hffff};
+			// // jal sum
+			// 	RAM_data[8'd13] <= {6'h03, 26'd4};
+			// // lw $a0, 0($sp)
+			// 	RAM_data[8'd14] <= {6'h23, 5'd29, 5'd04, 16'h0000};
+			// // lw $ra, 4($sp)
+			// 	RAM_data[8'd15] <= {6'h23, 5'd29, 5'd31, 16'h0004};
+			// // addi $sp, $sp, 8
+			// 	RAM_data[8'd16] <= {6'h08, 5'd29, 5'd29, 16'h0008};
+			// // add $v0, $a0, $v0
+			// 	RAM_data[8'd17] <= {6'h00, 5'd04, 5'd02, 5'd02, 5'd00, 6'h20};
+			// // jr $ra
+			// 	RAM_data[8'd18] <= {6'h00, 5'd31, 15'h0000, 6'h08};
+			
+			// Error Test
+			// addi $a0, $zero, 16'h7fff
+				RAM_data[8'd0] <= {6'h08, 5'd00, 5'd04, 16'h7fff};
+			// sll $a0, $a0, 16
+				RAM_data[8'd1] <= {6'h00, 5'd00, 5'd04, 5'd04, 5'd16, 6'h00};
+			// addi $a0, $a0, 16'h7fff;
+				RAM_data[8'd2] <= {6'h08, 5'd04, 5'd04, 16'h7fff};
+			// addi $a1, $zero, 16'h7fff;
+				RAM_data[8'd3] <= {6'h08, 5'd00, 5'd05, 16'h7fff};
+			// sll $a1, $a1, 16
+				RAM_data[8'd4] <= {6'h00, 5'd00, 5'd05, 5'd05, 5'd16, 6'h00};
+			// addi $a1, $a1, 16'h7fff
+				RAM_data[8'd5] <= {6'h08, 5'd05, 5'd05, 16'h7fff};
+			// add $a2, $a0, $a1
+				RAM_data[8'd6] <= {6'h00, 5'd04, 5'd5, 5'd06, 5'd00, 6'h20};
+			// loop:
+			// j loop
+				RAM_data[8'd7] <= {6'h02, 26'd7};
+			// error
+				RAM_data[8'd31] <= {6'h0d, 5'd00, 5'd00, 16'hffff};
             //init instruction memory
             //reset data memory		  
-			for (i = RAM_INST_SIZE - 1; i < RAM_SIZE; i = i + 1)
+			for (i = RAM_INST_SIZE - 1 ; i < RAM_SIZE; i = i + 1) // before i = RAM_INST_SIZE - 1
 				RAM_data[i] <= 32'h00000000;
 		end else if (MemWrite) begin
 			RAM_data[Address[RAM_SIZE_BIT + 1:2]] <= Write_data;

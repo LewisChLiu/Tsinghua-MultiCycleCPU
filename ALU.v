@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module ALU(ALUConf, Sign, In1, In2, Zero, Result);
+module ALU(ALUConf, Sign, In1, In2, Zero, Result, Overflow);
     // Control Signals
     input [4:0] ALUConf;
     input Sign;
@@ -30,10 +30,13 @@ module ALU(ALUConf, Sign, In1, In2, Zero, Result);
     // Output 
     output Zero;
     output reg [31:0] Result;
+	output Overflow;
 
     //Zero logic
     assign Zero = (Result == 0);
 
+	//Overflow Logic
+	assign Overflow = (~(In1[31] ^ In2[31])) & (Result[31] ^ In1[31]) & (ALUConf == 5'b00000);
     //ALU logic
     wire ss;
 	assign ss = {In1[31], In2[31]};
@@ -48,6 +51,7 @@ module ALU(ALUConf, Sign, In1, In2, Zero, Result);
     always @(*) begin
 		case (ALUConf)
 			5'b00000: Result <= In1 + In2;
+			5'b11011: Result <= In1 + In2; // for addiu and addu, overflow will not be detected.
 			5'b00001: Result <= In1 | In2;
 			5'b00010: Result <= In1 & In2;
 			5'b00110: Result <= In1 - In2;
