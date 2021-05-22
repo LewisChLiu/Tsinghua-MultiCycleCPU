@@ -250,14 +250,13 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 					IRWrite <= 1;
 					PCWrite <= 1;
 					PCWriteCond <= 0;
-					ErWrite <= 0;
 					Err <= 0;
 					isEIF <= 0;
 					WrE <= 0;
+					ErWrite <= 0;
 					PCSource[1:0] <= 2'b00;
 					ALUSrcA[1:0] <= 2'b00;
 					ALUSrcB[1:0] <= 2'b01;
-					
 				end
 			ID_RF:
 				begin
@@ -374,10 +373,10 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 								begin
 									PCWrite <= 1;
 									PCSource <= 2'b01;
-									RegWrite <= 1;
-									RegDst <= 2'b10;
-									PCorData <= 1;
-									MemtoReg <= 0;
+									//RegWrite <= 1;
+									//RegDst <= 2'b10;
+									//PCorData <= 1;
+									//MemtoReg <= 0;
 								end
 							6'h09: // jalr
 								begin

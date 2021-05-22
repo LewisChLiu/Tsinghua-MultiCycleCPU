@@ -73,6 +73,7 @@ module MultiCycleCPU (reset, clk);
     wire [31:0] Bout;
     wire [31:0] Result;
 	assign PC_i = Err ? (isEIF ? EPC_o : 32'h7c) : (PCSource[1] ? (PCSource[0] ? jAddr : shift_2) : (PCSource[0] ? ALUout : Result)); // PCSource = 10 for shift_2, =01 for ALUout, =00 for Result, =11 for jAddr
+	// assign PC_i = (PCSource[1] ? (PCSource[0] ? jAddr : shift_2) : (PCSource[0] ? ALUout : Result));
 	PC pc(reset, clk, PCWriteAC, PC_i, PC_o);
 	
 	// EPC Register
@@ -122,6 +123,7 @@ module MultiCycleCPU (reset, clk);
 	wire [31:0] Read_data2;
 	
 	assign Write_register[4:0] = WrE ? Er_o : (RegDst[1] ? 5'b11111 : (RegDst[0] ? rd : rt)); // RegDst = 00 for rt, RegDst = 01 for rd, 10 for $ra, Err = 1 for Er_o
+	//assign Write_register[4:0] = (RegDst[1] ? 5'b11111 : (RegDst[0] ? rd : rt));
 	assign Write_dataReg[31:0] = PCorData ? PC_o : (MemtoReg ? MDRout : ALUout); // MemtoReg = 1 for MDRout, MemtoReg = 0 for ALUout PCorData = 1 for PC, 0 for Data
 	RegisterFile registerfile(reset, clk, RegWrite, rs, rt, Write_register, Write_dataReg, Read_data1, Read_data2);
 	
