@@ -10,6 +10,10 @@ module ErrorTarget(reset, clk, ErWrite, Er_i, Er_o);
     input [4:0] Er_i;
     //Output PC  
     output reg [4:0] Er_o; 
+    
+    initial begin
+        Er_o <= 0;
+    end
 
 
 always@(posedge reset or posedge clk)

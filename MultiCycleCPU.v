@@ -19,11 +19,16 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module MultiCycleCPU (reset, clk);
-    //Input Clock Signals
+module MultiCycleCPU (reset, clk, a0, v0, sp, ra);
+    // Input Clock Signals
     input reset;
     input clk;
 
+	// Outputs
+	output [31:0] a0;
+	output [31:0] v0;
+	output [31:0] sp;
+	output [31:0] ra;
     //--------------Your code below-----------------------
 	
 	// Controller
@@ -72,13 +77,13 @@ module MultiCycleCPU (reset, clk);
     wire [31:0] ALUout;
     wire [31:0] Bout;
     wire [31:0] Result;
+    wire [31:0] EPC_o;
 	assign PC_i = Err ? (isEIF ? EPC_o : 32'h7c) : (PCSource[1] ? (PCSource[0] ? jAddr : shift_2) : (PCSource[0] ? ALUout : Result)); // PCSource = 10 for shift_2, =01 for ALUout, =00 for Result, =11 for jAddr
 	// assign PC_i = (PCSource[1] ? (PCSource[0] ? jAddr : shift_2) : (PCSource[0] ? ALUout : Result));
 	PC pc(reset, clk, PCWriteAC, PC_i, PC_o);
 	
 	// EPC Register
 	wire [31:0] EPC_i;
-	wire [31:0] EPC_o;
 	wire EPCWriteAC;
 	assign EPC_i = PC_o;
 	//assign EPCWriteAC = (~Err & PCWriteAC);
@@ -121,7 +126,7 @@ module MultiCycleCPU (reset, clk);
 	wire [31:0] Write_dataReg;
 	wire [31:0] Read_data1;
 	wire [31:0] Read_data2;
-	
+	wire [4:0] Er_o;
 	assign Write_register[4:0] = WrE ? Er_o : (RegDst[1] ? 5'b11111 : (RegDst[0] ? rd : rt)); // RegDst = 00 for rt, RegDst = 01 for rd, 10 for $ra, Err = 1 for Er_o
 	//assign Write_register[4:0] = (RegDst[1] ? 5'b11111 : (RegDst[0] ? rd : rt));
 	assign Write_dataReg[31:0] = PCorData ? PC_o : (MemtoReg ? MDRout : ALUout); // MemtoReg = 1 for MDRout, MemtoReg = 0 for ALUout PCorData = 1 for PC, 0 for Data
@@ -142,7 +147,7 @@ module MultiCycleCPU (reset, clk);
 
 	// ErrorTarget Register
 	wire [4:0] Er_i;
-	wire [4:0] Er_o;
+	
 	assign Er_i[4:0] = RegDst[0] ? rd : rt;
 	ErrorTarget errortarget(reset, clk, ErWrite, Er_i, Er_o);
 	
@@ -161,6 +166,11 @@ module MultiCycleCPU (reset, clk);
 	// Others
 	
 	assign shift_2 = {rs[4:0], rt[4:0], rd[4:0], Shamt[4:0], Funct[5:0]} << 2;
+
+	assign a0[31:0] = {16'b0, registerfile.RF_data[4][15:0]};
+	assign v0[31:0] = {16'b0, registerfile.RF_data[2][15:0]};
+	assign sp[31:0] = {16'b0, registerfile.RF_data[29][15:0]};
+	assign ra[31:0] = {16'b0, registerfile.RF_data[31][15:0]};
 	
 	
 	

@@ -23,16 +23,29 @@
 module test_cpu();
     
     reg reset;
-    reg clk;
+    reg cpuclk_i;
+    reg sys_clk;
+    reg SW2;
+    reg SW1;
+    reg SW0;
     
-    MultiCycleCPU MultiCycleCPU_1(reset, clk);
+    wire [7:0] led;
+    wire [3:0] ano;
+    wire [6:0] dout;
+    
+    
+    top top1(sys_clk, cpuclk_i, SW0, SW1, SW2, reset, ano, dout, led);
     
     initial begin
-        reset = 1;
-        clk = 1;
-        #100 reset = 0;
+        reset <= 0;
+        sys_clk <= 1;
+        SW0 <= 0;
+        SW1 <= 0;
+        SW2 <= 0;
+        forever begin
+        #5 sys_clk = ~sys_clk;
+        end
     end
     
-    always #50 clk = ~clk;
     
 endmodule

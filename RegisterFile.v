@@ -42,6 +42,12 @@ module RegisterFile(reset, clk, RegWrite, Read_register1, Read_register2, Write_
 	assign Read_data2 = (Read_register2 == 5'b00000)? 32'h00000000: RF_data[Read_register2];
 	
 	integer i;
+	initial begin
+	   for (i = 1; i < 32; i = i + 1) begin
+           RF_data[i] <= 32'h00000000;
+       end
+	end
+
 	always @(posedge reset or posedge clk) begin
 		if (reset) begin
 			for (i = 1; i < 32; i = i + 1) begin

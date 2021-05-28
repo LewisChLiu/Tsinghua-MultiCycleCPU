@@ -78,32 +78,12 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 	//	OpCode_delay <= OpCode;
 	//	Funct_delay <= Funct;
 	//end
-	
+
 	always @(posedge clk or posedge reset) begin
 		if (reset) begin
 			SM_State <= IF;
-			PCWrite <= 0;
-			PCWriteCond <= 0;
-			IorD <= 0;
-			MemWrite <= 0;
-			MemRead <= 0;
-			IRWrite <= 0;
-			MemtoReg <= 0;
-			RegDst[1:0] <= 2'b00;
-			RegWrite <= 0;
-			ExtOp <= 0;
-			LuiOp <= 0;
-			ALUSrcA[1:0] <= 2'b00;
-			ALUSrcB[1:0] <= 2'b00;
-			ALUOp[3:0] <= 2'b0000;
-			PCSource[1:0] <= 2'b00;
-			PCorData <= 0;
-			Err <= 0;
-			ErWrite <= 0;
-			isEIF <= 0;
-			WrE <= 0;
 		end
-		else begin
+	    else begin
 			case(SM_State)
 				IF:
 					begin
@@ -228,18 +208,44 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 				// 	begin
 				// 		SM_State <= IF;
 				// 	end
+				default:
+				    begin
+			            SM_State <= IF;
+			        end
 			endcase
 		end
 	end
 	
-	// ExtOp and LuiOp
-	always @(*) begin
-		ExtOp = (OpCode == 6'h0c) ? 0 : 1; // andi
-		LuiOp = (OpCode == 6'h0f) ? 1 : 0; // lui
-	end
+	
 	
 	// Control Logics
 	always @(*) begin
+	    if (reset) begin
+                PCWrite <= 0;
+                PCWriteCond <= 0;
+                IorD <= 0;
+                MemWrite <= 0;
+                MemRead <= 0;
+                IRWrite <= 0;
+                MemtoReg <= 0;
+                RegDst[1:0] <= 2'b00;
+                RegWrite <= 0;
+                ExtOp <= 0;
+                LuiOp <= 0;
+                ALUSrcA[1:0] <= 2'b00;
+                ALUSrcB[1:0] <= 2'b00;
+                ALUOp[3:0] <= 4'b0000;
+                PCSource[1:0] <= 2'b00;
+                PCorData <= 0;
+                Err <= 0;
+                ErWrite <= 0;
+                isEIF <= 0;
+                WrE <= 0;
+       end
+       else begin
+       // ExtOp and LuiOp
+       ExtOp <= (OpCode[5:0] == 6'h0c) ? 0 : 1; // andi
+       LuiOp <= (OpCode[5:0] == 6'h0f) ? 1 : 0; // lui
 		case(SM_State)
 			IF:
 				begin
@@ -257,6 +263,9 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 					PCSource[1:0] <= 2'b00;
 					ALUSrcA[1:0] <= 2'b00;
 					ALUSrcB[1:0] <= 2'b01;
+					MemtoReg <= 0;
+					RegDst[1:0] <= 2'b00;
+					PCorData <= 0;
 				end
 			ID_RF:
 				begin
@@ -266,81 +275,195 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 						MemRead <= 0;
 						IRWrite <= 0;
 						PCWrite <= 0;
+						PCWriteCond <= 0;
 						ALUSrcA[1:0] <= 2'b00;
 						ALUSrcB[1:0] <= 2'b11;
+						IorD <= 0;
+						MemWrite <= 0;
+						MemtoReg <= 0;
+						RegDst[1:0] <= 2'b00;
+						RegWrite <= 0;
+						PCSource[1:0] <= 2'b00;
+						PCorData <= 0;
+						WrE <= 0;
+
 				end
 			EXE:
 				begin
+				    IorD <= 0;
+				    MemWrite <= 0;
+					MemRead <= 0;
+					IRWrite <= 0;
+					ErWrite <= 0;
+					isEIF <= 0;
+					WrE <= 0;
 					case(OpCode)
 							6'h0f: // lui
 								begin
+								    PCWriteCond <= 0;
+								    PCWrite <= 0;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h08: // addi
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h09: // addiu, prob exists
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h0c: // andi
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h0a: // slti
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h0b: // sltiu
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h23:
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									ALUSrcA <= 2'b01;
-									ALUSrcB <= 2'b10;		
+									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h2b:
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h04:
 								begin
+								    PCWrite <= 0;
 									PCWriteCond <= 1;
 									ALUSrcA <= 2'b01;
 									ALUSrcB <= 2'b00;
 									PCSource <= 2'b01;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCorData <= 0;
+									Err <= 0;
 								end	
 							6'h02:
 								begin
 									PCWrite <= 1;
+									PCWriteCond <= 0;
 									PCSource[1:0] <= 2'b11;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									ALUSrcA[1:0] <= 2'b00;
+									ALUSrcB[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 								end
 							6'h03:
 								begin
 									PCWrite <= 1;
+									PCWriteCond <= 0;
 									PCSource <= 2'b11;
 									RegWrite <= 1;
 									RegDst <= 2'b10;
 									PCorData <= 1;
 									MemtoReg <= 0;
+									ALUSrcA[1:0] <= 2'b00;
+									ALUSrcB[1:0] <= 2'b00;
+									Err <= 0;
 								end
 							6'h0d:
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
 									Err <= 0;
 									ALUSrcA <= 01;
 									ALUSrcB <= 10;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
 								end
 							6'h00:
 								begin
+								    PCWrite <= 0;
+								    PCWriteCond <= 0;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCSource[1:0] <= 2'b00;
+									PCorData <= 0;
+									Err <= 0;
 									case(Funct)
 										6'h00:
 											begin
@@ -364,15 +487,43 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 											end
 									endcase
 								end
+						  default:
+						      begin
+						          PCWrite <= 0;
+						          PCWriteCond <= 0;
+								  MemtoReg <= 0;
+								  RegDst[1:0] <= 2'b00;
+								  RegWrite <= 0;
+								  ALUSrcA[1:0] <= 2'b00;
+								  ALUSrcB[1:0] <= 2'b00;
+								  PCSource[1:0] <= 2'b00;
+								  PCorData <= 0;
+								  Err <= 0;
+						      end
 					endcase
 				end
 			JC:
 				begin
+				    IorD <= 0;
+				    MemWrite <= 0;
+					IRWrite <= 0;
+					ALUSrcA[1:0] <= 2'b00;
+					ALUSrcB[1:0] <= 2'b00;
+					Err <= 0;
+					ErWrite <= 0;
+					isEIF <= 0;
+					WrE <= 0;
+					MemRead <= 0;
 					case(Funct)
 							6'h08: // jr
 								begin
 									PCWrite <= 1;
 									PCSource <= 2'b01;
+									PCWriteCond <= 0;
+									MemtoReg <= 0;
+									RegDst[1:0] <= 2'b00;
+									RegWrite <= 0;
+									PCorData <= 0;
 									//RegWrite <= 1;
 									//RegDst <= 2'b10;
 									//PCorData <= 1;
@@ -386,50 +537,92 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 									RegDst <= 2'b01;
 									PCorData <= 1;
 									MemtoReg <= 0;
+									PCWriteCond <= 0;
 								end
-							default:begin
-									end		
+							default:
+							    begin
+							         PCWrite <= 0;
+							         PCWriteCond <= 0;
+									 MemtoReg <= 0;
+									 RegDst[1:0] <= 2'b00;
+									 RegWrite <= 0;
+									 PCSource[1:0] <= 2'b00;
+									 PCorData <= 0;
+							    end		
 					endcase
 				end
 			RW:
 				begin
 					RegWrite <= 1;
+					PCWriteCond <= 0;
+					IorD <= 0;
+					MemWrite <= 0;
+					MemRead <= 0;
+					IRWrite <= 0;
+					ALUSrcA[1:0] <= 2'b00;
+					ALUSrcB[1:0] <= 2'b00;
+					PCSource[1:0] <= 2'b00;
+					ErWrite <= 0;
 						case(OpCode)
 							6'h0f: // lui
 								begin
+								    PCWrite <= 0;
 									RegDst <= 2'b00;
 									PCorData <= 0;
 									MemtoReg <= 0;
+									Err <= 0;
+									isEIF <= 0;
+									WrE <= 0;
 								end
 							6'h08: // addi
 								begin
+								    PCWrite <= 0;
 									RegDst <= 2'b00;
 									PCorData <= 0;
 									MemtoReg <= 0;
+									Err <= 0;
+									isEIF <= 0;
+									WrE <= 0;
 								end
 							6'h09: // addiu, prob exists
 								begin
+								    PCWrite <= 0;
 									RegDst <= 2'b00;
 									PCorData <= 0;
 									MemtoReg <= 0;
+									Err <= 0;
+									isEIF <= 0;
+									WrE <= 0;
 								end
 							6'h0c: // andi
 								begin
+								    PCWrite <= 0;
 									RegDst <= 2'b00;
 									PCorData <= 0;
 									MemtoReg <= 0;
+									Err <= 0;
+									isEIF <= 0;
+									WrE <= 0;
 								end
 							6'h0a: // slti
 								begin
+								    PCWrite <= 0;
 									RegDst <= 2'b00;
 									PCorData <= 0;
 									MemtoReg <= 0;
+									Err <= 0;
+									isEIF <= 0;
+									WrE <= 0;
 								end
 							6'h0b: // sltiu
 								begin
+								    PCWrite <= 0;
 									RegDst <= 2'b00;
 									PCorData <= 0;
 									MemtoReg <= 0;
+									Err <= 0;
+									isEIF <= 0;
+									WrE <= 0;
 								end
 							6'h0d:
 								begin
@@ -439,32 +632,79 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 									Err <= 1;
 									isEIF <= 1;
 									PCWrite <= 1;
+									RegDst[1:0] <= 2'b00;
 								end
 							default:
 								begin
+								    PCWrite <= 0;
 									RegDst <= 2'b01;
 									PCorData <= 0;
 									MemtoReg <= 0;
+									Err <= 0;
+									isEIF <= 0;
+									WrE <= 0;
 								end
 						endcase
 				end
 			MAR:
 				begin
+				        PCWrite <= 0;
 						MemRead <= 1;
 						IorD <= 1;
+						PCWriteCond <= 0;
+						MemWrite <= 0;
+						IRWrite <= 0;
+						MemtoReg <= 0;
+						RegDst[1:0] <= 2'b00;
+						RegWrite <= 0;
+						ALUSrcA[1:0] <= 2'b00;
+						ALUSrcB[1:0] <= 2'b00;
+						PCSource[1:0] <= 2'b00;
+						PCorData <= 0;
+						Err <= 0;
+						ErWrite <= 0;
+						isEIF <= 0;
+						WrE <= 0;
 				end
 			RWLW:
 				begin
+				        PCWrite <= 0;
 						MemRead <= 0;
 						RegWrite <= 1;
 						RegDst <= 2'b00; // write in rt
 						PCorData <= 0;
 						MemtoReg <= 1;
+						PCWriteCond <= 0;
+						IorD <= 1;
+						MemWrite <= 0;
+						IRWrite <= 0;
+						ALUSrcA[1:0] <= 2'b00;
+						ALUSrcB[1:0] <= 2'b00;
+						PCSource[1:0] <= 2'b00;
+						Err <= 0;
+						ErWrite <= 0;
+						isEIF <= 0;
+						WrE <= 0;
 				end
 			MAW:
 				begin
+				        PCWrite <= 0;
 						MemWrite <= 1;
 						IorD <= 1;
+						PCWriteCond <= 0;
+						MemRead <= 0;
+						IRWrite <= 0;
+						MemtoReg <= 0;
+						RegDst[1:0] <= 2'b00;
+						RegWrite <= 0;
+						ALUSrcA[1:0] <= 2'b00;
+						ALUSrcB[1:0] <= 2'b00;
+						PCSource[1:0] <= 2'b00;
+						PCorData <= 0;
+						Err <= 0;
+						ErWrite <= 0;
+						isEIF <= 0;
+						WrE <= 0;
 				end
 			ERR:
 				begin
@@ -472,62 +712,63 @@ module Controller(reset, clk, OpCode, Funct, Overflow,
 					PCWrite <= 1;
 					ErWrite <= 1;
 					isEIF <= 0;
+					PCWriteCond <= 0;
+					IorD <= 0;
+					MemWrite <= 0;
+					MemRead <= 0;
+					IRWrite <= 0;
+					MemtoReg <= 0;
+					RegDst[1:0] <= 2'b00;
+					RegWrite <= 0;
+					ALUSrcA[1:0] <= 2'b00;
+					ALUSrcB[1:0] <= 2'b00;
+					PCSource[1:0] <= 2'b00;
+					PCorData <= 0;
+					WrE <= 0;
 				end
-			// ERR:
-			// 	begin
-			// 		PCWrite <= 1;
-			// 		Err <= 1;
-			// 		ErWrite <= 0;
-			// 		isEIF <= 0;
-			// 		MemWrite <= 0;
-			// 		RegWrite <= 0;
-			// 		IorD <= 0;
-			// 		MemRead <= 0;
-			// 		IRWrite <= 0;
-			// 		PCWriteCond <= 0;
-			// 	end
-			// EMP:
-			// 	begin
-			// 		PCWrite <= 0;
-			// 		ErWrite <= 1;
-			// 		MemRead <= 1;
-			// 		IRWrite <= 1;
-			// 	end
-			// EWB:
-			// 	begin
-			// 		RegWrite <= 1;
-			// 		PCorData <= 0;
-			// 		MemtoReg <= 0;
-			// 		Err <= 1;
-			// 	end
-			// TMP:
-			// 	begin
-					
-			// 	end
+			default: begin
+			     MemWrite <= 0;
+                 RegWrite <= 0;
+                 IorD <= 0;
+                 MemRead <= 1;
+                 IRWrite <= 1;
+                 PCWrite <= 1;
+                 PCWriteCond <= 0;
+                 Err <= 0;
+                 isEIF <= 0;
+                 WrE <= 0;
+                 ErWrite <= 0;
+                 PCSource[1:0] <= 2'b00;
+                 ALUSrcA[1:0] <= 2'b00;
+                 ALUSrcB[1:0] <= 2'b01;
+				 MemtoReg <= 0;
+				 RegDst[1:0] <= 2'b00;
+				 PCorData <= 0;
+			end
 		endcase
+		// ALUOp
+		ALUOp[3] <= OpCode[0];
+                if (SM_State == IF || SM_State == ID_RF) begin
+                    ALUOp[2:0] <= 3'b000;
+                end else if (OpCode == 6'h00) begin 
+                    ALUOp[2:0] <= 3'b010;
+                end else if (OpCode == 6'h04) begin
+                    ALUOp[2:0] <= 3'b001;
+                end else if (OpCode == 6'h0c) begin
+                    ALUOp[2:0] <= 3'b100;
+                end else if (OpCode == 6'h0a || OpCode == 6'h0b) begin
+                    ALUOp[2:0] <= 3'b101;
+                end else if (OpCode == 6'h09) begin
+                    ALUOp[2:0] <= 3'b011;
+                end else begin
+                    ALUOp[2:0] <= 3'b000;
+	            end
 	end
 
     //--------------Your code above-----------------------
 
 
-    //ALUOp
-    always @(*) begin
-        ALUOp[3] = OpCode[0];
-        if (SM_State == IF || SM_State == ID_RF) begin
-            ALUOp[2:0] = 3'b000;
-        end else if (OpCode == 6'h00) begin 
-            ALUOp[2:0] = 3'b010;
-        end else if (OpCode == 6'h04) begin
-            ALUOp[2:0] = 3'b001;
-        end else if (OpCode == 6'h0c) begin
-            ALUOp[2:0] = 3'b100;
-        end else if (OpCode == 6'h0a || OpCode == 6'h0b) begin
-            ALUOp[2:0] = 3'b101;
-		end else if (OpCode == 6'h09) begin
-			ALUOp[2:0] = 3'b011;
-        end else begin
-            ALUOp[2:0] = 3'b000;
-        end
+
     end
 
 endmodule

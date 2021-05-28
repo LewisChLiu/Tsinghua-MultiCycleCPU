@@ -29,6 +29,9 @@ module RegTemp(reset, clk, Data_i, Data_o);
     //Output Data
     output reg [31:0] Data_o;
     
+    initial begin
+        Data_o <= 32'h00000000;
+    end
     always@(posedge reset or posedge clk) begin
         if (reset) begin
             Data_o <= 32'h00000000;

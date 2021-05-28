@@ -37,9 +37,19 @@ module InstReg(reset, clk, IRWrite, Instruction, OpCode, rs, rt, rd, Shamt, Func
     
     reg [31:0] instruction;
     
+    initial begin
+        OpCode[5:0] <= 6'b000000;
+        rs <= 5'b00000;
+        rt <= 5'b00000;
+        rd <= 5'b00000;
+        Shamt <= 5'b00000;
+        Funct <= 6'b000000;
+        instruction <= 32'b0;
+    end
+    
     always @(posedge reset or posedge clk) begin
         if (reset) begin
-            OpCode <= 6'b000000;
+            OpCode[5:0] <= 6'b000000;
             rs <= 5'b00000;
             rt <= 5'b00000;
             rd <= 5'b00000;
